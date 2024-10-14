@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ESP8266 Web Server</title>
+    <title>Dynamic ESP8266 Web Server</title>
     <style>
         body { font-family: Arial; text-align: center; }
         button { padding: 10px 20px; font-size: 16px; }
     </style>
-    <link rel="stylesheet" href="./style.css">
-    <link rel="stylesheet" href="./bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="./assets/style.css">
+    <link rel="stylesheet" href="./assets/bootstrap.rtl.min.css">
     <script>
         function sayHello() {
             alert("Hello from ESP8266!");
         }
     </script>
-    <script src="./bootstrap.bundle.min.js" type="text/javascript"></script>
+    <script src="./assets/bootstrap.bundle.min.js" type="text/javascript"></script>
 </head>
 <body>
-    <h1>Welcome to ESP8266 Web Server</h1>
+    <h1>{{title}}</h1>
+    <p id="dynamicContent">{{dynamicContent}}</p>
     <button class="btn btn-primary" onclick="sayHello()">Click Me!</button>
 </body>
 </html>
