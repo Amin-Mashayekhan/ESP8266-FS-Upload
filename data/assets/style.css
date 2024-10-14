@@ -3,7 +3,7 @@
     font-family: Vazir;
     src: url("./fonts/vazir-font/Vazir-Medium-FD.eot");
     src: url("./fonts/vazir-font/Vazir-Medium-FD.eot?#iefix") format('embedded-opentype'), url("./fonts/vazir-font/Vazir-Medium-FD.woff2") format('woff2'), url("./fonts/vazir-font/Vazir-Medium-FD.woff") format('woff'), url("./fonts/vazir-font/Vazir-Medium-FD.ttf") format('truetype');
-    font-weight: 500;
+    font-weight: normal;
     font-style: normal;
 }
 
