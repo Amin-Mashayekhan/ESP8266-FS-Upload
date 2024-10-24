@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
-#include <LittleFS.h> // Include the LittleFS library
+#include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <LittleFS.h> // Include the LittleFS library
 
 const char *ssid = "Maad";
 const char *password = "Mm-12345";
@@ -11,7 +12,31 @@ AsyncWebServer server(80);
 // Dynamic content
 String title = "Welcome to My ESP8266 Web Server";
 String dynamicContent = "This is dynamic text from ESP8266!";
-unsigned long long server_start_second = 0;
+unsigned long long serverStartSecond = 0;
+
+// Create WebSocket object
+AsyncWebSocket ws("/ws");
+
+// Function to handle WebSocket events
+void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
+                      AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+  if (type == WS_EVT_CONNECT)
+  {
+    Serial.println("WebSocket client connected");
+  }
+  else if (type == WS_EVT_DISCONNECT)
+  {
+    Serial.println("WebSocket client disconnected");
+  }
+}
+
+// Function to send real-time data over WebSocket
+void notifyClients()
+{
+  String json = "{\"serverStartSecond\": \"" + String(serverStartSecond) + "\"}";
+  ws.textAll(json); // Send data to all connected clients
+}
 
 void setup()
 {
@@ -56,7 +81,7 @@ void setup()
         // Replace placeholders
         html.replace("{{title}}", title);
         html.replace("{{dynamicContent}}", dynamicContent);
-        html.replace("{{server_start_second}}", String(server_start_second));
+        html.replace("{{serverStartSecond}}", String(serverStartSecond));
         request->send(200, "text/html", html); });
 
   // Serve CSS and JS files
@@ -82,16 +107,22 @@ void setup()
   server.on("/assets/fonts/vazir-font/Vazir-Medium-FD.eot", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(LittleFS, "/assets/fonts/vazir-font/Vazir-Medium-FD.eot", "font/eot"); });
 
+  // Initialize WebSocket
+  ws.onEvent(onWebSocketEvent);
+  server.addHandler(&ws);
+
   server.begin();
 }
 
-unsigned long server_start_previous_millis = 0;
+unsigned long serverStartPreviousMillis = 0;
 void loop()
 {
   unsigned long long currentMillis = millis();
-  if (currentMillis - server_start_previous_millis >= 1000)
+  if (currentMillis - serverStartPreviousMillis >= 1000)
   {
-    server_start_previous_millis = currentMillis;
-    server_start_second++;
+    serverStartPreviousMillis = currentMillis;
+    serverStartSecond++;
+    // Send real-time updates to connected WebSocket clients
+    notifyClients();
   }
 }
