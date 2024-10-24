@@ -1,30 +1,47 @@
 #include <ESP8266WiFi.h>
-#include <LittleFS.h>  // Include the LittleFS library
+#include <LittleFS.h> // Include the LittleFS library
 #include <ESPAsyncWebServer.h>
- 
-const char* ssid = "Maad";
-const char* password =  "Mm-12345";
- 
+
+const char *ssid = "Maad";
+const char *password = "Mm-12345";
+int wifi_timer = 0;
+
 AsyncWebServer server(80);
- 
-void setup(){
+
+// Dynamic content
+String title = "Welcome to My ESP8266 Web Server";
+String dynamicContent = "This is dynamic text from ESP8266!";
+unsigned long long server_start_second = 0;
+
+void setup()
+{
   Serial.begin(9600);
- 
-  if(!LittleFS.begin()){
-     Serial.println("An Error has occurred while mounting LittleFS");
-     return;
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  if (!LittleFS.begin())
+  {
+    Serial.println("An Error has occurred while mounting LittleFS");
+    return;
   }
- 
+
   WiFi.begin(ssid, password);
- 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(999.9);
+    wifi_timer++;
+    Serial.println("Connecting to WiFi.. \\ " + String(wifi_timer));
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(0.1);
+    digitalWrite(LED_BUILTIN, HIGH);
   }
- 
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, HIGH);
   Serial.println(WiFi.localIP());
- 
-   if (!LittleFS.begin()) {
+
+  if (!LittleFS.begin())
+  {
     Serial.println("LittleFS Mount Failed");
     return;
   }
@@ -32,52 +49,49 @@ void setup(){
   // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
   //   request->send(200, "text/html", "<h1>Hello, World!</h1>");
   // });
-  
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
         String html = LittleFS.open("/index.html", "r").readString();
-
-        // Dynamic content
-        String title = "Welcome to My ESP8266 Web Server";
-        String dynamicContent = "This is dynamic text from ESP8266!";
-
         // Replace placeholders
         html.replace("{{title}}", title);
         html.replace("{{dynamicContent}}", dynamicContent);
+        html.replace("{{server_start_second}}", String(server_start_second));
+        request->send(200, "text/html", html); });
 
-        request->send(200, "text/html", html);
-    });
+  // Serve CSS and JS files
+  server.on("/assets/bootstrap.rtl.min.css", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(LittleFS, "/assets/bootstrap.rtl.min.css", "text/css"); });
 
-  // Serve CSS and JS files 
-  server.on("/assets/bootstrap.rtl.min.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/assets/bootstrap.rtl.min.css", "text/css");
-  });
- 
-  server.on("/assets/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/assets/style.css", "text/css");
-  });
- 
-  server.on("/assets/bootstrap.bundle.min.js", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/assets/bootstrap.bundle.min.js", "text/javascript");
-  });
+  server.on("/assets/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(LittleFS, "/assets/style.css", "text/css"); });
 
-  // Serve Font files 
-    server.on("/assets/fonts/Vazir-Medium-FD.woff2", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/assets/fonts/Vazir-Medium-FD.woff2", "font/woff2");
-    });
+  server.on("/assets/bootstrap.bundle.min.js", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(LittleFS, "/assets/bootstrap.bundle.min.js", "text/javascript"); });
 
-    server.on("/assets/fonts/Vazir-Medium-FD.woff", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/assets/fonts/Vazir-Medium-FD.woff", "font/woff");
-    });
+  // Serve Font files
+  server.on("/assets/fonts/vazir-font/Vazir-Medium-FD.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(LittleFS, "/assets/fonts/vazir-font/Vazir-Medium-FD.woff2", "font/woff2"); });
 
-    server.on("/assets/fonts/Vazir-Medium-FD.ttf", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/assets/fonts/Vazir-Medium-FD.ttf", "font/ttf");
-    });
+  server.on("/assets/fonts/vazir-font/Vazir-Medium-FD.woff", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(LittleFS, "/assets/fonts/vazir-font/Vazir-Medium-FD.woff", "font/woff"); });
 
-    server.on("/assets/fonts/Vazir-Medium-FD.eot", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/assets/fonts/Vazir-Medium-FD.eot", "font/eot");
-    });
- 
+  server.on("/assets/fonts/vazir-font/Vazir-Medium-FD.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(LittleFS, "/assets/fonts/vazir-font/Vazir-Medium-FD.ttf", "font/ttf"); });
+
+  server.on("/assets/fonts/vazir-font/Vazir-Medium-FD.eot", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(LittleFS, "/assets/fonts/vazir-font/Vazir-Medium-FD.eot", "font/eot"); });
+
   server.begin();
 }
- 
-void loop(){}
+
+unsigned long server_start_previous_millis = 0;
+void loop()
+{
+  unsigned long long currentMillis = millis();
+  if (currentMillis - server_start_previous_millis >= 1000)
+  {
+    server_start_previous_millis = currentMillis;
+    server_start_second++;
+  }
+}
