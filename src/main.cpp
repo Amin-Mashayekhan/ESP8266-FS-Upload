@@ -31,13 +31,6 @@ void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
   }
 }
 
-// Function to send real-time data over WebSocket
-void notifyClients()
-{
-  String json = "{\"serverStartSecond\": \"" + String(serverStartSecond) + "\"}";
-  ws.textAll(json); // Send data to all connected clients
-}
-
 void setup()
 {
   Serial.begin(9600);
@@ -60,6 +53,7 @@ void setup()
     delay(0.1);
     digitalWrite(LED_BUILTIN, HIGH);
   }
+  // WiFi successfully connected
   digitalWrite(LED_BUILTIN, LOW);
   delay(1000);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -81,7 +75,6 @@ void setup()
         // Replace placeholders
         html.replace("{{title}}", title);
         html.replace("{{dynamicContent}}", dynamicContent);
-        html.replace("{{serverStartSecond}}", String(serverStartSecond));
         request->send(200, "text/html", html); });
 
   // Serve CSS and JS files
@@ -114,15 +107,63 @@ void setup()
   server.begin();
 }
 
+unsigned long long lastSendTime = 0;
+unsigned long sendInterval = 1500; // Initial interval of 1.5 second
+unsigned int successfulSends = 0;
+unsigned int failedSends = 0;
+unsigned long long fastCounter = 0;
+unsigned long long currentMillis = 0;
+// Function to send real-time data over WebSocket
+void notifyClients()
+{
+  // Create a JSON string to send over WebSocket
+  String json = "{\"sendInterval\": \"" + String(sendInterval) + "\",";
+  json += "\"freeHeap\": \"" + String(ESP.getFreeHeap()) + "\",";
+  json += "\"successfulSends\": \"" + String(successfulSends) + "\",";
+  json += "\"failedSends\": \"" + String(failedSends) + "\",";
+  json += "\"preparationMoment\": \"" + String(currentMillis) + "\",";
+  json += "\"serverStartSecond\": \"" + String(serverStartSecond) + "\", \"fastCounter\": \"" + String(fastCounter) + "\"}";
+  bool sent = ws.textAll(json); // Send data to all connected clients
+  if (ws.count() > 0)
+  {
+    if (sent)
+    {
+      successfulSends++;
+      if (sendInterval > 100)
+      {
+        sendInterval -= 50;
+      }
+      else if (sendInterval > 34)
+      {
+        sendInterval -= 1;
+      }
+    }
+    else
+    {
+      failedSends++;
+      sendInterval += 100;
+    }
+  }
+}
+
 unsigned long serverStartPreviousMillis = 0;
 void loop()
 {
-  unsigned long long currentMillis = millis();
+  fastCounter++;
+  currentMillis = millis();
   if (currentMillis - serverStartPreviousMillis >= 1000)
   {
     serverStartPreviousMillis = currentMillis;
     serverStartSecond++;
+    // Serial.println("\n Server Start Seconds" + String(serverStartSecond));
     // Send real-time updates to connected WebSocket clients
+  }
+
+  if (currentMillis - lastSendTime >= sendInterval)
+  {
+    // Serial.println(" * f-c: " + String(fastCounter) + " \ c-m: " + String(currentMillis) + " * ");
+    Serial.println(currentMillis);
+    lastSendTime = currentMillis;
     notifyClients();
   }
 }
