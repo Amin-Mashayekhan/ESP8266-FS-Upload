@@ -6,7 +6,7 @@
 #include <LittleFS.h>
 
 // Create WebSocket object
-WebSocketModule testWebSocket("/ws");
+WebSocketModule testWebSocket("/web-socket-test-ws");
 
 // Function to handle WebSocket events
 void onWebSocketEventWST(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)

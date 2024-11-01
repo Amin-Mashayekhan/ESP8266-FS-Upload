@@ -3,7 +3,7 @@
 #include "../../modules/web-socket/webSocketShared.h"
 
 // Create WebSocket object
-WebSocketModule analogGraphWebSocket("/ws");
+WebSocketModule analogGraphWebSocket("/analog-graph-ws");
 
 // Function to handle WebSocket events
 void onWebSocketEventAG(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)

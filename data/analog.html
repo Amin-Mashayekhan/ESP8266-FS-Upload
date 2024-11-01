@@ -61,11 +61,12 @@
 
         console.log("🚀 ~ outer:")
         window.onload = function () {
-            console.log("🚀 ~ onload")
-            websocket = new WebSocket('ws://' + window.location.hostname + '/ws');
+            websocket = new WebSocket(`ws://${location.host}/analog-graph-ws`);
+            websocket.onopen = () => console.log("Connected to WebSocket");
+            websocket.onclose = () => console.log("Disconnected from WebSocket");
+            console.log("🚀 ~ onload ", websocket)
 
             websocket.onmessage = function (event) {
-                console.log("🚀 ~ data:", event)
                 var data = JSON.parse(event.data);
 
                 var time = new Date().toLocaleTimeString();
