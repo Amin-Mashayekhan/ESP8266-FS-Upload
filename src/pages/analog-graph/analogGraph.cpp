@@ -10,11 +10,11 @@ void onWebSocketEventAG(AsyncWebSocket *server, AsyncWebSocketClient *client, Aw
 {
   if (type == WS_EVT_CONNECT)
   {
-    Serial.printf("Client connected to web socket test page: %u\n", client->id());
+    Serial.printf("Client connected to analog graph: %u\n", client->id(), client->remoteIP().toString().c_str());
   }
   else if (type == WS_EVT_DISCONNECT)
   {
-    Serial.printf("Client disconnected from web socket test page: %u\n", client->id());
+    Serial.printf("Client disconnected from analog graph: %u\n", client->id(), client->remoteIP().toString().c_str());
   }
 }
 
