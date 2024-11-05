@@ -37,7 +37,7 @@ void setupAnalogGraphWebSocketPage(AsyncWebServer *server)
 unsigned long lastSendTimeAGP = 0;
 void notifyAnalogGraph()
 {
-  if (currentMillis - lastSendTimeAGP >= 56)
+  if (currentMillis - lastSendTimeAGP >= 100)
   {
     lastSendTimeAGP = currentMillis;
     // Serve the analog reading data as JSON

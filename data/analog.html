@@ -59,16 +59,13 @@
 
         var websocket;
 
-        console.log("🚀 ~ outer:")
         window.onload = function () {
             websocket = new WebSocket(`ws://${location.host}/analog-graph-ws`);
             websocket.onopen = () => console.log("Connected to WebSocket");
             websocket.onclose = () => console.log("Disconnected from WebSocket");
-            console.log("🚀 ~ onload ", websocket)
 
             websocket.onmessage = function (event) {
                 var data = JSON.parse(event.data);
-
                 var time = new Date().toLocaleTimeString();
                 chart.data.labels.push(time);
                 chart.data.datasets[0].data.push(data.analog);
@@ -76,6 +73,7 @@
                 if (chart.data.labels.length > 200) {
                     chart.data.labels.shift();
                     chart.data.datasets[0].data.shift();
+                    // chart.update('none');  // updating the chart without animation
                 }
             }
         }
